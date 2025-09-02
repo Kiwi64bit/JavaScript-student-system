@@ -219,7 +219,7 @@ function submitData(form, table) {
         return;
     }
     if (form.submitBtn.dataset.action === "edit") {
-        if (!confirm("Are you sure you want to delete this student?")) return;
+        if (!confirm("Are you sure you want to edit this student?")) return;
         state.students[state.editingId] = data;
         updateStudentRow(table, state.editingId, data);
         saveState(state);
