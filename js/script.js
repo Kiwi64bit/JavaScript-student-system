@@ -1,15 +1,27 @@
-const form = document.getElementById("formInput");
-const formInputs = form.querySelectorAll("input");
-const submitBtn = form.querySelector(".submit-btn");
-const resetBtn = form.querySelector(".reset-btn");
-const searchInput = document.getElementById("search");
-const warningMessage = document.getElementById("emptyTableWarning");
-const table = document.getElementById("contentTable");
-const tableBody = table.querySelector("tbody");
-const studentsData = JSON.parse(localStorage.getItem("studentsData")) ?? {};
-let currentId = parseInt(localStorage.getItem("currentId") ?? 1);
-let currentEditRow = null;
-let activeUndoButton = null;
+const state = loadState();
+
+const formElement = document.getElementById("formInput");
+const formInputsElements = formElement.querySelectorAll("input");
+const submitBtnElement = formElement.querySelector(".submit-btn");
+const resetBtnElement = formElement.querySelector(".reset-btn");
+const form = {
+    form: formElement,
+    inputs: formInputsElements,
+    submitBtn: submitBtnElement,
+    resetBtn: resetBtnElement,
+};
+
+const tableElement = document.getElementById("contentTable");
+const tBodyElement = tableElement.querySelector("tbody");
+const searchInputElement = document.getElementById("search");
+const warningMessageElement = document.getElementById("emptyTableWarning");
+const table = {
+    table: tableElement,
+    tbody: tBodyElement,
+    searchInput: searchInputElement,
+    warningMessage: warningMessageElement,
+};
+
 const patterns = {
     firstName: /^[a-z]+$/i,
     lastName: /^[a-z]+$/i,
@@ -18,60 +30,63 @@ const patterns = {
     phone: /^(0020|\+20|0)(10|11|12|15)\d{8}$/,
 };
 
-function isObjectEmpty(obj) {
-    if (!obj) return true;
-    return Object.keys(obj).length === 0;
-}
-
-function updateWarningMessage(dataBase) {
-    warningMessage.style.display = "none";
-    if (isObjectEmpty(dataBase)) {
-        warningMessage.style.display = "block";
+function loadState() {
+    try {
+        const students = JSON.parse(localStorage.getItem("studentsData")) ?? {};
+        const currentId = parseInt(localStorage.getItem("lastId") ?? 1, 10);
+        return { students, currentId, editingId: null, activeUndoBtn: null };
+    } catch {
+        // fallback for corrupted JSON
+        return { students: {}, currentId: 1, editingId: null, activeUndoBtn: null };
     }
 }
 
-function reloadStudentsTable(dataBase) {
-    tableBody.innerHTML = "";
-    for (const id in dataBase) {
-        const data = dataBase[id];
-        addStudentRow(id, data);
+function saveState(state) {
+    localStorage.setItem("studentsData", JSON.stringify(state.students));
+    localStorage.setItem("lastId", String(state.currentId));
+}
+
+function updateWarningMessage(table) {
+    table.warningMessage.style.display = table.tbody.children.length === 0 ? "block" : "none";
+}
+
+function reloadTableContent(table, content) {
+    table.tbody.innerHTML = "";
+    for (const id in content) {
+        const data = content[id];
+        const studentRowElement = createStudentRow(id, data);
+        table.tbody.appendChild(studentRowElement);
     }
-    updateWarningMessage(dataBase);
+    updateWarningMessage(table);
 }
 
-function clearTable() {
-    tableBody.innerHTML = "";
-}
-
-function updateLocalStorage() {
-    localStorage.setItem("studentsData", JSON.stringify(studentsData));
-    localStorage.setItem("currentId", currentId);
-}
-
-function setSubmitBtnMode(mode) {
+function setFormSubmitBtnMode(form, mode) {
     if (mode === "edit") {
-        submitBtn.dataset.mode = "edit";
-        submitBtn.classList.replace("btn-success", "btn-info");
-        submitBtn.textContent = "Edit";
+        form.submitBtn.dataset.action = "edit";
+        form.submitBtn.classList.replace("btn-success", "btn-info");
+        form.submitBtn.textContent = "Edit";
         return;
     }
     if (mode === "add") {
-        submitBtn.dataset.mode = "add";
-        submitBtn.classList.replace("btn-info", "btn-success");
-        submitBtn.textContent = "Add";
+        form.submitBtn.dataset.action = "add";
+        form.submitBtn.classList.replace("btn-info", "btn-success");
+        form.submitBtn.textContent = "Add";
         return;
     }
 }
 
-function addStudent(id, data) {
-    studentsData[id] = data;
-    updateWarningMessage(studentsData);
+function addStudent(table, id, data) {
+    state.students[id] = data;
+    const studentRowElement = createStudentRow(id, data);
+    table.tbody.appendChild(studentRowElement);
+    updateWarningMessage(table);
+    saveState(state);
 }
 
-function addStudentRow(id, data) {
-    const studentRow = document.createElement("tr");
-    studentRow.dataset.id = id;
-    studentRow.innerHTML = `
+function createStudentRow(id, data) {
+    const tr = document.createElement("tr");
+    tr.dataset.id = id;
+    tr.innerHTML = `
         <th scope="row">${id}</th>
         <td>${data.firstName}</td>
         <td>${data.lastName}</td>
@@ -79,159 +94,154 @@ function addStudentRow(id, data) {
         <td>${data.email}</td>
         <td>${data.phone}</td>
         <td>
-            <button class="btn btn-info text-light" onclick="editAction(this)">Edit</button>
-            <button class="btn btn-danger text-light" onclick="deleteAction(this)">Delete</button>
+            <button class="btn btn-info text-light" data-action="edit">Edit</button>
+            <button class="btn btn-danger text-light" data-action="delete">Delete</button>
         </td>`;
-    tableBody.appendChild(studentRow);
+    return tr;
 }
 
-function deleteAction(that) {
-    const deleteConfirmation = confirm("Are you sure you want to delete this student?");
-    if (!deleteConfirmation) return;
-    const studentRow = that.closest("tr");
-    delete studentsData[studentRow.dataset.id];
-    studentRow.remove();
-    updateLocalStorage();
-    updateWarningMessage(studentsData);
+function deleteStudent(table, id) {
+    const rowElement = table.tbody.querySelector(`tr[data-id="${id}"]`);
+    if (!confirm("Are you sure you want to delete this student?")) return;
+    delete state.students[id];
+    rowElement.remove();
+    saveState(state);
+    updateWarningMessage(table);
 }
 
-function editAction(that) {
-    const oldActiveUndoBtn = activeUndoButton;
-    const editBtn = that;
-    const studentRow = editBtn.closest("tr");
-    const data = studentsData[studentRow.dataset.id];
-    activeUndoButton = editBtn;
-    currentEditRow = studentRow;
-    setEditBtn(oldActiveUndoBtn);
-    setUndoBtn(activeUndoButton);
-    editMode(data);
-}
+function startEdit(form, id) {
+    const oldUndoBtn = state.activeUndoBtn;
+    const rowElement = table.tbody.querySelector(`tr[data-id="${id}"]`);
+    const editBtn = rowElement.querySelector(`button[data-action="edit"]`);
 
-function editMode(data) {
-    for (const input of formInputs) {
-        input.value = data[input.name];
-        validateInput(input);
+    state.editingId = id;
+    const data = state.students[id];
+    for (const input of form.inputs) {
+        input.value = data[input.name] ?? "";
     }
-    setSubmitBtnMode("edit");
+
+    state.activeUndoBtn = editBtn;
+    setFormSubmitBtnMode(form, "edit");
+    setEditBtn(oldUndoBtn);
+    setUndoBtn(state.activeUndoBtn);
 }
 
-function editStudentRow(studentRow, newData) {
-    const id = studentRow.dataset.id;
-    studentsData[id] = newData;
-    updateLocalStorage();
-    studentRow.innerHTML = `
-        <th scope="row">${id}</th>
-        <td>${newData.firstName}</td>
-        <td>${newData.lastName}</td>
-        <td>${newData.age}</td>
-        <td>${newData.email}</td>
-        <td>${newData.phone}</td>
-        <td>
-            <button class="btn btn-info text-light" onclick="editAction(this)">Edit</button>
-            <button class="btn btn-danger text-light" onclick="deleteAction(this)">Delete</button>
-        </td>`;
+function updateStudentRow(table, id, newData) {
+    const oldRow = table.tbody.querySelector(`tr[data-id="${id}"]`);
+    if (!oldRow) return;
+    const newRow = createStudentRow(id, newData);
+    table.tbody.replaceChild(newRow, oldRow);
 }
 
-function setUndoBtn(btn) {
+function setUndoBtn(btn = null) {
     if (!btn) return;
     btn.classList.replace("btn-info", "btn-primary");
     btn.textContent = "Undo";
-    btn.onclick = undoEdit;
+    btn.dataset.action = "undo";
 }
 
-function setEditBtn(btn) {
+function setEditBtn(btn = null) {
     if (!btn) return;
     btn.classList.replace("btn-primary", "btn-info");
     btn.textContent = "Edit";
-    btn.onclick = () => {
-        editAction(btn);
-    };
+    btn.dataset.action = "edit";
 }
 
-function undoEdit() {
-    resetForm();
-    setSubmitBtnMode("add");
-    setEditBtn(activeUndoButton);
+function undoEdit(form) {
+    resetForm(form);
+    setFormSubmitBtnMode(form, "add");
+    setEditBtn(state.activeUndoBtn);
+    state.editingId = null;
+    state.activeUndoBtn = null;
 }
 
 function validateInput(input) {
     const errorField = input.parentElement.nextElementSibling;
-    const isValid = patterns[input.name].test(input.value.trim());
-    const isEmpty = !input.value;
-    if (isValid) {
-        input.classList.add("is-valid");
-        errorField.style.display = "none";
-        input.classList.remove("is-invalid");
-        input.classList.add("is-valid");
-    }
-    if (!isValid) {
-        errorField.style.display = "block";
-        errorField.textContent = "Invalid input!";
-        input.classList.remove("is-valid");
-        input.classList.add("is-invalid");
-    }
+    const value = input.value.trim();
+    const isEmpty = !value;
+    const isValid = patterns[input.name].test(value);
+
     if (isEmpty) {
-        errorField.style.display = "block";
-        errorField.textContent = "This field is required!";
+        showError(input, errorField, "This field is required!");
+        return false;
     }
-    return isValid;
+
+    if (!isValid) {
+        showError(input, errorField, "Invalid input!");
+        return false;
+    }
+
+    showSuccess(input, errorField);
+    return true;
+}
+
+function showError(input, errorField, message) {
+    input.classList.remove("is-valid");
+    input.classList.add("is-invalid");
+    errorField.style.display = "block";
+    errorField.textContent = message;
+}
+
+function showSuccess(input, errorField) {
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+    errorField.style.display = "none";
 }
 
 function validateInputs(inputs) {
     const data = {};
-    let isFormValid = true;
+    let isValid = true;
     for (const input of inputs) {
         const isInputValid = validateInput(input);
-        isFormValid = isFormValid && isInputValid;
+        isValid = isValid && isInputValid;
         data[input.name] = input.value.trim();
     }
-    return isFormValid ? data : null;
+    return isValid ? data : null;
 }
 
-function resetForm() {
-    for (const input of formInputs) {
+function resetForm(form) {
+    for (const input of form.inputs) {
         input.blur();
-        input.classList.remove("is-valid");
-        input.classList.remove("is-invalid");
-
+        input.classList.remove("is-valid", "is-invalid");
         const errorField = input.parentElement.nextElementSibling;
         errorField.style.display = "none";
     }
-    submitBtn.dataset.mode = "add";
-
-    form.reset();
+    form.form.reset();
 }
 
-function submitData() {
-    const data = validateInputs(formInputs);
+function submitData(form, table) {
+    const data = validateInputs(form.inputs);
     if (!data) return;
-    if (submitBtn.dataset.mode === "add") {
-        const id = currentId++;
-        addStudent(id, data);
-        addStudentRow(id, data);
-        updateLocalStorage();
-        resetForm();
+
+    if (form.submitBtn.dataset.action === "add") {
+        addStudent(table, state.currentId++, data);
+        resetForm(form);
         return;
     }
-    if (submitBtn.dataset.mode === "edit") {
-        editStudentRow(currentEditRow, data);
-        setSubmitBtnMode("add");
-        resetForm();
+    if (form.submitBtn.dataset.action === "edit") {
+        if (!confirm("Are you sure you want to delete this student?")) return;
+        state.students[state.editingId] = data;
+        updateStudentRow(table, state.editingId, data);
+        saveState(state);
+        setFormSubmitBtnMode(form, "add");
+        resetForm(form);
+        return;
     }
 }
 
-function search(obj, query) {
+function search(content, query) {
     const searchResult = {};
     query = query.toLowerCase().trim();
-    for (const id in obj) {
-        const data = obj[id];
-        if (id.includes(query)) {
+    if (!query) return content;
+    for (const id in content) {
+        const data = content[id];
+        if (String(id).includes(query)) {
             searchResult[id] = data;
             continue;
         }
         for (const key in data) {
             const value = data[key];
-            if (value.toLowerCase().includes(query)) {
+            if (String(value).toLowerCase().includes(query)) {
                 searchResult[id] = data;
                 break;
             }
@@ -240,25 +250,46 @@ function search(obj, query) {
     return searchResult;
 }
 
-reloadStudentsTable(studentsData);
+reloadTableContent(table, state.students);
 
-form.addEventListener("submit", (event) => {
+form.form.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitData();
+    submitData(form, table);
 });
 
-resetBtn.addEventListener("click", () => {
+form.resetBtn.addEventListener("click", () => {
     resetForm(form);
 });
 
-for (const input of formInputs) {
+for (const input of form.inputs) {
     input.addEventListener("blur", () => {
         validateInput(input);
     });
 }
 
-searchInput.addEventListener("input", () => {
-    const query = searchInput.value;
-    const results = search(studentsData, query);
-    reloadStudentsTable(results);
+table.searchInput.addEventListener("input", () => {
+    const query = table.searchInput.value;
+    const results = search(state.students, query);
+    reloadTableContent(table, results);
+});
+
+table.tbody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const row = btn.closest("tr");
+    const id = row.dataset.id;
+
+    if (btn.dataset.action === "delete") {
+        deleteStudent(table, id);
+        return;
+    }
+    if (btn.dataset.action === "edit") {
+        startEdit(form, id);
+        return;
+    }
+    if (btn.dataset.action === "undo") {
+        undoEdit(form);
+        return;
+    }
 });
