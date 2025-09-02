@@ -5,60 +5,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student System</title>
+    <link rel="shortcut icon" href="images/logo-be01d065.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
         integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <section id="Form" class="mb-3">
+    <section id="formSection" class="mb-3">
         <div class="container text-center">
+
             <div class="logo"><img src="images/logo-be01d065.png" class="img-fluid my-5" alt=""></div>
-            <form id="input-form" action="" class="mx-auto px-4 py-2 rounded-4" style="max-width: 500px;">
-                <h3 class="py-2" style="color: #ae8745;">Student System</h3>
-                <div class="input-group mb-1">
-                    <label class="input-group-text" for="first-name"><i class="fa-solid fa-user"></i></label>
-                    <input type="text" id="first-name" name="firstName" class="form-control" autocomplete="off"
+
+            <form id="formInput" class="floating-input mx-auto px-4 py-2 rounded-4">
+                <h3 class="py-2">Student System</h3>
+                <div class="reset-btn text-danger"><b>Reset</b></div>
+
+                <div class="input-group mt-3">
+                    <label class="input-group-text" for="firstName"><i class="fa-solid fa-user"></i></label>
+                    <input type="text" id="firstName" name="firstName" class="form-control" autocomplete="off"
                         placeholder="First name *">
                 </div>
-                <p class="error-field text-start px-2 text-danger"></p>
-                <div class="input-group mb-1">
-                    <label class="input-group-text" for="last-name"><i class="fa-solid fa-user"></i></label>
-                    <input type="text" id="last-name" name="lastName" class="form-control" autocomplete="off"
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+
+                <div class="input-group mt-3">
+                    <label class="input-group-text" for="lastName"><i class="fa-solid fa-user"></i></label>
+                    <input type="text" id="lastName" name="lastName" class="form-control" autocomplete="off"
                         placeholder="Last name *">
                 </div>
-                <p class="error-field text-start px-2 text-danger"></p>
-                <div class="input-group mb-1">
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+
+                <div class="input-group mt-3">
                     <label class="input-group-text" for="age"><i class="fa-solid fa-hashtag"></i></label>
                     <input type="text" id="age" name="age" class="form-control" autocomplete="off" placeholder="Age *">
                 </div>
-                <p class="error-field text-start px-2 text-danger"></p>
-                <div class="input-group mb-1">
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+
+                <div class="input-group mt-3">
                     <label class="input-group-text" for="email"><i class="fa-solid fa-at"></i></label>
                     <input type="text" id="email" name="email" class="form-control" autocomplete="off"
                         placeholder="Email *">
                 </div>
-                <p class="error-field text-start px-2 text-danger"></p>
-                <div class="input-group mb-1">
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+
+                <div class="input-group mt-3">
                     <label class="input-group-text" for="phone"><i class="fa-solid fa-phone"></i></label>
                     <input type="text" id="phone" name="phone" class="form-control" autocomplete="off"
                         placeholder="Phone *">
                 </div>
-                <p class="error-field text-start px-2 text-danger"></p>
-                <div class="input-group mb-3">
-                    <button type="submit" class="btn btn-success w-100">Add</button>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+
+                <div class="input-group my-3">
+                    <button type="submit" class="submit-btn btn btn-success text-light w-100" data-mode="add">Add</button>
                 </div>
             </form>
         </div>
     </section>
 
-    <section id="Table">
+    <section id="table">
         <div class="container">
-            <input type="text" name="search" class="form-control mx-auto my-5" style="max-width: 500px;"
-                placeholder="Search">
-            <table id="view-table" class="table mb-5 rounded-2 overflow-hidden">
+            <div class="input-group floating-input mx-auto my-5">
+                <label class="input-group-text" for="search"><i class="fa-solid fa-magnifying-glass"></i></label>
+                <input type="text" id="search" name="search" class="form-control" autocomplete="off"
+                    placeholder="Search...">
+            </div>
+            <h6 id="emptyTableWarning" class="alert alert-warning text-center">
+                There is no data!
+            </h6>
+            <table id="contentTable" class="table mb-5 rounded-2 overflow-hidden">
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">#</th>
