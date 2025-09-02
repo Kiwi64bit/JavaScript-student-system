@@ -41,3 +41,21 @@ body {
 #emptyTableWarning {
     display: none;
 }
+
+@keyframes rowHighlight {
+    0% {
+        background-color: #a3dfb1;
+    }
+
+    50% {
+        background-color: #a3dfb1;
+    }
+}
+
+.highlight-row {
+    animation: rowHighlight var(--highlight-duration, 1.5s) ease-out;
+}
+
+.highlight-row>* {
+    animation: rowHighlight var(--highlight-duration, 1.5s) ease-out;
+}

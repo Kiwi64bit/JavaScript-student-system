@@ -21,41 +21,41 @@
 
             <form id="formInput" class="floating-input mx-auto px-4 py-2 rounded-4">
                 <h3 class="py-2">Student System</h3>
-                <div class="reset-btn text-danger"><b>Reset</b></div>
+                <div class="reset-btn text-danger" style="display: none;"><b>Reset</b></div>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="firstName"><i class="fa-solid fa-user"></i></label>
                     <input type="text" id="firstName" name="firstName" class="form-control" autocomplete="off"
                         placeholder="First name *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="firstName"></p>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="lastName"><i class="fa-solid fa-user"></i></label>
                     <input type="text" id="lastName" name="lastName" class="form-control" autocomplete="off"
                         placeholder="Last name *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="lastName"></p>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="age"><i class="fa-solid fa-hashtag"></i></label>
                     <input type="text" id="age" name="age" class="form-control" autocomplete="off" placeholder="Age *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="age"></p>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="email"><i class="fa-solid fa-at"></i></label>
                     <input type="text" id="email" name="email" class="form-control" autocomplete="off"
                         placeholder="Email *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="email"></p>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="phone"><i class="fa-solid fa-phone"></i></label>
                     <input type="text" id="phone" name="phone" class="form-control" autocomplete="off"
                         placeholder="Phone *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="phone"></p>
 
                 <div class="input-group my-3">
                     <button type="submit" class="submit-btn btn btn-success text-light w-100" data-action="add">Add</button>

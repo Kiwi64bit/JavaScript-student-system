@@ -1,25 +1,25 @@
 const state = loadState();
 
 const formElement = document.getElementById("formInput");
-const formInputsElements = formElement.querySelectorAll("input");
-const submitBtnElement = formElement.querySelector(".submit-btn");
-const resetBtnElement = formElement.querySelector(".reset-btn");
+const formInputs = formElement.querySelectorAll("input");
+const submitBtn = formElement.querySelector(".submit-btn");
+const resetBtn = formElement.querySelector(".reset-btn");
 const form = {
-    form: formElement,
-    inputs: formInputsElements,
-    submitBtn: submitBtnElement,
-    resetBtn: resetBtnElement,
+    element: formElement,
+    inputs: formInputs,
+    submitBtn: submitBtn,
+    resetBtn: resetBtn,
 };
 
 const tableElement = document.getElementById("contentTable");
-const tBodyElement = tableElement.querySelector("tbody");
-const searchInputElement = document.getElementById("search");
-const warningMessageElement = document.getElementById("emptyTableWarning");
+const tBody = tableElement.querySelector("tbody");
+const searchInput = document.getElementById("search");
+const warningMessage = document.getElementById("emptyTableWarning");
 const table = {
-    table: tableElement,
-    tbody: tBodyElement,
-    searchInput: searchInputElement,
-    warningMessage: warningMessageElement,
+    element: tableElement,
+    tbody: tBody,
+    searchInput: searchInput,
+    warningMessage: warningMessage,
 };
 
 const patterns = {
@@ -34,7 +34,7 @@ function loadState() {
     try {
         const students = JSON.parse(localStorage.getItem("studentsData")) ?? {};
         const currentId = parseInt(localStorage.getItem("lastId") ?? 1, 10);
-        return { students, currentId, editingId: null, activeUndoBtn: null };
+        return { students, currentId, editingId: null, activeUndoBtn: null, activeDeleteBtn: null };
     } catch {
         // fallback for corrupted JSON
         return { students: {}, currentId: 1, editingId: null, activeUndoBtn: null };
@@ -42,8 +42,12 @@ function loadState() {
 }
 
 function saveState(state) {
-    localStorage.setItem("studentsData", JSON.stringify(state.students));
-    localStorage.setItem("lastId", String(state.currentId));
+    try {
+        localStorage.setItem("studentsData", JSON.stringify(state.students));
+        localStorage.setItem("lastId", String(state.currentId));
+    } catch (e) {
+        console.error("Could not save to localStorage", e);
+    }
 }
 
 function updateWarningMessage(table) {
@@ -58,6 +62,15 @@ function reloadTableContent(table, content) {
         table.tbody.appendChild(studentRowElement);
     }
     updateWarningMessage(table);
+}
+
+function highlightRow(row, className, duration = 1500) {
+    row.style.setProperty("--highlight-duration", `${duration}ms`);
+    row.classList.add(className);
+    setTimeout(() => {
+        row.classList.remove(className);
+        row.style.removeProperty("--highlight-duration");
+    }, duration);
 }
 
 function setFormSubmitBtnMode(form, mode) {
@@ -77,10 +90,30 @@ function setFormSubmitBtnMode(form, mode) {
 
 function addStudent(table, id, data) {
     state.students[id] = data;
-    const studentRowElement = createStudentRow(id, data);
-    table.tbody.appendChild(studentRowElement);
-    updateWarningMessage(table);
+    insertOrUpdateRow(table, id, data);
     saveState(state);
+}
+
+function updateStudentRow(table, id, newData) {
+    state.students[id] = newData;
+    insertOrUpdateRow(table, id, newData, true);
+    saveState(state);
+}
+
+function insertOrUpdateRow(table, id, data, highlight = false) {
+    const existingRow = table.tbody.querySelector(`tr[data-id="${id}"]`);
+    const newRow = createStudentRow(id, data);
+
+    if (existingRow) {
+        table.tbody.replaceChild(newRow, existingRow);
+        if (highlight) {
+            highlightRow(newRow, "highlight-row", 3000);
+        }
+    } else {
+        table.tbody.appendChild(newRow);
+    }
+
+    updateWarningMessage(table);
 }
 
 function createStudentRow(id, data) {
@@ -100,8 +133,7 @@ function createStudentRow(id, data) {
     return tr;
 }
 
-function deleteStudent(table, id) {
-    const rowElement = table.tbody.querySelector(`tr[data-id="${id}"]`);
+function deleteStudent(table, id, rowElement) {
     if (!confirm("Are you sure you want to delete this student?")) return;
     delete state.students[id];
     rowElement.remove();
@@ -110,9 +142,11 @@ function deleteStudent(table, id) {
 }
 
 function startEdit(form, id) {
+    resetForm(form);
     const oldUndoBtn = state.activeUndoBtn;
     const rowElement = table.tbody.querySelector(`tr[data-id="${id}"]`);
     const editBtn = rowElement.querySelector(`button[data-action="edit"]`);
+    state.activeDeleteBtn = rowElement.querySelector(`button[data-action="delete"]`);
 
     state.editingId = id;
     const data = state.students[id];
@@ -122,37 +156,33 @@ function startEdit(form, id) {
 
     state.activeUndoBtn = editBtn;
     setFormSubmitBtnMode(form, "edit");
-    setEditBtn(oldUndoBtn);
-    setUndoBtn(state.activeUndoBtn);
+    setButtonMode(oldUndoBtn, "edit");
+    setButtonMode(state.activeUndoBtn, "undo");
+    state.activeDeleteBtn.disabled = true;
+    form.resetBtn.style.display = "block";
 }
 
-function updateStudentRow(table, id, newData) {
-    const oldRow = table.tbody.querySelector(`tr[data-id="${id}"]`);
-    if (!oldRow) return;
-    const newRow = createStudentRow(id, newData);
-    table.tbody.replaceChild(newRow, oldRow);
-}
-
-function setUndoBtn(btn = null) {
+function setButtonMode(btn = null, mode) {
     if (!btn) return;
-    btn.classList.replace("btn-info", "btn-primary");
-    btn.textContent = "Undo";
-    btn.dataset.action = "undo";
-}
 
-function setEditBtn(btn = null) {
-    if (!btn) return;
-    btn.classList.replace("btn-primary", "btn-info");
-    btn.textContent = "Edit";
-    btn.dataset.action = "edit";
+    const config = {
+        edit: { from: "btn-primary", to: "btn-info", text: "Edit" },
+        undo: { from: "btn-info", to: "btn-primary", text: "Undo" },
+    };
+
+    const { from, to, text } = config[mode];
+    btn.classList.replace(from, to);
+    btn.textContent = text;
+    btn.dataset.action = mode;
 }
 
 function undoEdit(form) {
     resetForm(form);
     setFormSubmitBtnMode(form, "add");
-    setEditBtn(state.activeUndoBtn);
+    setButtonMode(state.activeUndoBtn, "edit");
     state.editingId = null;
     state.activeUndoBtn = null;
+    state.activeDeleteBtn.disabled = false;
 }
 
 function validateInput(input) {
@@ -203,10 +233,11 @@ function resetForm(form) {
     for (const input of form.inputs) {
         input.blur();
         input.classList.remove("is-valid", "is-invalid");
-        const errorField = input.parentElement.nextElementSibling;
+        const errorField = form.element.querySelector(`[data-error-id=${input.name}]`);
         errorField.style.display = "none";
     }
-    form.form.reset();
+    form.element.reset();
+    form.resetBtn.style.display = "none";
 }
 
 function submitData(form, table) {
@@ -252,13 +283,13 @@ function search(content, query) {
 
 reloadTableContent(table, state.students);
 
-form.form.addEventListener("submit", (event) => {
+form.element.addEventListener("submit", (event) => {
     event.preventDefault();
     submitData(form, table);
 });
 
 form.resetBtn.addEventListener("click", () => {
-    resetForm(form);
+    undoEdit(form);
 });
 
 for (const input of form.inputs) {
@@ -281,7 +312,7 @@ table.tbody.addEventListener("click", (e) => {
     const id = row.dataset.id;
 
     if (btn.dataset.action === "delete") {
-        deleteStudent(table, id);
+        deleteStudent(table, id, row);
         return;
     }
     if (btn.dataset.action === "edit") {
