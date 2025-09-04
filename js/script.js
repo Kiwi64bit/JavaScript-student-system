@@ -144,6 +144,7 @@ function deleteStudent(table, id, rowElement) {
 function startEdit(form, id) {
     resetForm(form);
     const oldUndoBtn = state.activeUndoBtn;
+    const oldDeleteBtn = state.activeDeleteBtn;
     const rowElement = table.tbody.querySelector(`tr[data-id="${id}"]`);
     const editBtn = rowElement.querySelector(`button[data-action="edit"]`);
     state.activeDeleteBtn = rowElement.querySelector(`button[data-action="delete"]`);
@@ -158,7 +159,8 @@ function startEdit(form, id) {
     setFormSubmitBtnMode(form, "edit");
     setButtonMode(oldUndoBtn, "edit");
     setButtonMode(state.activeUndoBtn, "undo");
-    state.activeDeleteBtn.disabled = true;
+    if (oldDeleteBtn) oldDeleteBtn.disabled = false;
+    if (state.activeDeleteBtn) state.activeDeleteBtn.disabled = true;
     form.resetBtn.style.display = "block";
 }
 
@@ -286,6 +288,13 @@ reloadTableContent(table, state.students);
 form.element.addEventListener("submit", (event) => {
     event.preventDefault();
     submitData(form, table);
+});
+
+form.element.addEventListener("input", () => {
+    if (form.submitBtn.dataset.action === "add") {
+        const hasValue = Array.from(form.inputs).some((input) => input.value);
+        form.resetBtn.style.display = hasValue ? "block" : "none";
+    }
 });
 
 form.resetBtn.addEventListener("click", () => {
