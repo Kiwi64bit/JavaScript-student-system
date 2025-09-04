@@ -28,7 +28,8 @@
                     <input type="text" id="firstName" name="firstName" class="form-control" autocomplete="off"
                         placeholder="First name *">
                 </div>
-                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="firstName"></p>
+                <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="firstName">
+                </p>
 
                 <div class="input-group mt-3">
                     <label class="input-group-text" for="lastName"><i class="fa-solid fa-user"></i></label>
@@ -58,7 +59,8 @@
                 <p class="error-field alert alert-danger text-start text-danger mt-1 py-2" data-error-id="phone"></p>
 
                 <div class="input-group my-3">
-                    <button type="submit" class="submit-btn btn btn-success text-light w-100" data-action="add">Add</button>
+                    <button type="submit" class="submit-btn btn btn-success text-light w-100"
+                        data-action="add">Add</button>
                 </div>
             </form>
         </div>
@@ -74,22 +76,24 @@
             <h6 id="emptyTableWarning" class="alert alert-warning text-center">
                 There is no data!
             </h6>
-            <table id="contentTable" class="table mb-5 rounded-2 overflow-hidden">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">First name</th>
-                        <th scope="col">Last name</th>
-                        <th scope="col">Age</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Phone</th>
-                        <th scope="col">Options</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- rows will be inserted py JavaScript here. -->
-                </tbody>
-            </table>
+            <div class="container p-0 mb-5 g-0 overflow-auto">
+                <table id="contentTable" class="table m-0 rounded-2 overflow-hidden">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">First name</th>
+                            <th scope="col">Last name</th>
+                            <th scope="col">Age</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- rows will be inserted py JavaScript here. -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 

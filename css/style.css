@@ -42,6 +42,11 @@ body {
     display: none;
 }
 
+#contentTable {
+    min-width: max-content;
+    width: 100%;
+}
+
 @keyframes rowHighlight {
     0% {
         background-color: #a3dfb1;
