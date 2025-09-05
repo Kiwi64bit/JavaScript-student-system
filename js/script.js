@@ -182,9 +182,9 @@ function undoEdit(form) {
     resetForm(form);
     setFormSubmitBtnMode(form, "add");
     setButtonMode(state.activeUndoBtn, "edit");
+    if (state.activeDeleteBtn) state.activeDeleteBtn.disabled = false;
     state.editingId = null;
     state.activeUndoBtn = null;
-    state.activeDeleteBtn.disabled = false;
 }
 
 function validateInput(input) {
